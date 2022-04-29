@@ -1,0 +1,142 @@
+#!/usr/bin/php
+<?php
+
+$nextpage = "left";
+
+if (count($argv) < 2) {
+    print "mkpag <page.pag> [<page.pag>...]\n";
+    exit(10);
+}
+
+array_shift($argv);
+
+$out = array();
+
+page_header($out);
+
+foreach ($argv as $page) {
+
+    if ($page == "left") {
+        $nextpage = "left";
+        continue;
+    }
+
+    if ($page == "right") {
+        $nextpage = "right";
+        continue;
+    }
+
+    if ($page == "blank") {
+        $out[] = '\clearpage';
+        $out[] = '\newpage';
+        $out[] = '\mbox{}';
+        continue;
+    }
+
+    if (preg_match("/^(.*)\.pag$/", $page, $m)) {
+        create_page($m[1], $nextpage, $out);
+    } else {
+        print "Unknown file $page\n";
+    }
+}
+
+page_footer($out);
+
+function page_header(&$out) {
+    $out[] = '\documentclass[a4paper,10pt,landscape,twocolumn]{article}';
+    $out[] = '\usepackage[a4paper,bottom=1mm,top=17mm,left=15mm,right=1mm,landscape]{geometry}';
+    $out[] = '\usepackage{tikz,xcolor}';
+    $out[] = '\usepackage{pst-barcode}';
+    $out[] = '\usetikzlibrary{shapes.geometric,backgrounds}';
+
+    $out[] = '\begin{document}';
+}
+
+function page_footer(&$out) {
+    $out[] = '\end{document}';
+}
+
+$name = "mkpage";
+
+file_put_contents($name . ".tex", implode("\n", $out) . "\n");
+
+system("latex " . escapeshellarg($name . ".tex"));
+system("dvips " . escapeshellarg($name . ".dvi"));
+system("ps2pdf " . escapeshellarg($name . ".ps"));
+unlink($name . ".tex");
+unlink($name . ".dvi");
+unlink($name . ".ps");
+unlink($name . ".log");
+unlink($name . ".aux");
+
+function create_page($name, $side, &$out) {
+    $data = file_get_contents($name . ".pag");
+    $lines = explode("\n", $data);
+
+    $out[] = '\thispagestyle{empty}';
+    $out[] = '\makeatletter';
+
+
+    $out[] = '\begin{tikzpicture}'; 
+
+    if ($side == "left") {
+        $out[] = '    \draw (0mm, 0mm) -- (103mm, 0mm) -- (116mm, 13mm) -- (116mm, 162mm) -- (103mm, 175mm) -- (0mm, 175mm) -- (0mm, 0mm);';
+    } else if ($side == "right") {
+        $out[] = '    \draw (0mm, 13mm) -- (13mm, 0mm) -- (116mm, 0mm) -- (116mm, 175mm) -- (13mm, 175mm) -- (0mm, 162mm) -- (0mm, 13mm);';
+    }
+
+    for ($l = 0; $l < 11; $l++) {
+        $out[] = '\draw (15mm, ' . (($l * 14.5) + 14.5) . 'mm) -- (101mm, ' . (($l * 14.5) + 14.5) . 'mm);';
+    }
+
+    $pos = 175 - 7.25;
+    foreach ($lines as $line) {
+        if (strlen($line) > 0) {
+
+            $segs = explode("\t", $line);
+
+            switch (count($segs)) {
+                case 1:
+                    $code = $segs[0];
+                    $text = $segs[0];
+                    $extra = "";
+                    break;
+                case 2:
+                    $code = $segs[0];
+                    $text = $segs[1];
+                    $extra = "";
+                    break;
+                case 3:
+                    $code = $segs[0];
+                    $text = $segs[1];
+                    $extra = $segs[2];
+                    break;
+                default:
+                    print "Format error\n";
+                    continue 2;
+                    break;
+            }
+
+            if ($pos > 0) {
+                if ($extra == "") {
+                    $out[] = '  \node[anchor=west] at (15mm, ' . $pos . 'mm) {' . $text . '};';
+                } else {
+                    $out[] = '  \node[anchor=west] at (15mm, ' . ($pos + 2) . 'mm) {' . $text . '};';
+                    $out[] = '  \node[anchor=west] at (15mm, ' . ($pos - 3) . 'mm) {' . $extra . '};';
+                }
+                $out[] = '  \node[anchor=east] at (103mm, ' . ($pos + 1) . 'mm) {';
+                $out[] = '\begin{pspicture}(35mm,10mm)';
+                $out[] = '\psbarcode{' . $code . '}{parse rows=10 columns=4}{micropdf417}';
+                $out[] = '\end{pspicture}';
+                $out[] = '  };';
+            }
+        }
+        $pos -= 14.5;
+    }
+
+
+    $out[] = '\end{tikzpicture}';
+    $out[] = '\newpage';
+
+
+}
