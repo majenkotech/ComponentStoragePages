@@ -14,6 +14,8 @@ If only 2 fields are specified in the file only one line of text is printed.
 If only 1 field is specified in the file the MPN is printed in place of the second
 (omitted) field.
 
+If the second field is % the first field is automatically copied into its place.
+
 Usage
 -----
 
