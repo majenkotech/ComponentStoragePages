@@ -4,7 +4,7 @@
 $nextpage = "left";
 
 if (count($argv) < 2) {
-    print "mkpag <page.pag> [<page.pag>...]\n";
+    print $argv[0] . " <page.pag> [<page.pag>...]\n";
     exit(10);
 }
 
@@ -14,7 +14,19 @@ $out = array();
 
 page_header($out);
 
+$name = "mkpage";
+
 foreach ($argv as $page) {
+
+    if ($name === false) {
+        $name = $page;
+        continue;
+    }
+
+    if ($page == "output") {
+        $name = false;
+        continue;
+    }
 
     if ($page == "left") {
         $nextpage = "left";
@@ -55,8 +67,6 @@ function page_header(&$out) {
 function page_footer(&$out) {
     $out[] = '\end{document}';
 }
-
-$name = "mkpage";
 
 file_put_contents($name . ".tex", implode("\n", $out) . "\n");
 
