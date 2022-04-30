@@ -32,3 +32,11 @@ See the included `Makefile` for an example
 
 The output is one PDF file with A4 pages in landscape with each page having two folder
 inserts rendered.
+
+Requirements
+------------
+
+* PHP (cli)
+* A LaTeX engine (such as texlive)
+* LaTeX "pstricks"
+* LaTeX "tikz"
