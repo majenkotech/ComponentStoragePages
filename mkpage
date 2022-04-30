@@ -127,6 +127,10 @@ function create_page($name, $side, &$out) {
                     break;
             }
 
+            if ($text == "%") $text = $code;
+
+            print "[$code] [$text] [$extra]\n";
+
             if ($pos > 0) {
                 if ($extra == "") {
                     $out[] = '  \node[anchor=west] at (15mm, ' . $pos . 'mm) {' . $text . '};';
