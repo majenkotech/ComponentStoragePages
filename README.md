@@ -29,6 +29,8 @@ Keywords may be one of:
 * `right` - All following pages are shaped to fit on the right side of the folder
 * `blank` - Insert a blank page
 * `output` - Set the output filename (omit the .pdf) - the next keyword is the output name
+* `wide` - Subsequent pages have only 6 wider slots
+* `narrow` - Subsequent pages have the default 12 narrow slots
 
 See the included `Makefile` for an example
 
