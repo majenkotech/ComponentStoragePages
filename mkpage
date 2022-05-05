@@ -15,6 +15,7 @@ $out = array();
 page_header($out);
 
 $name = "mkpage";
+$size = "narrow";
 
 foreach ($argv as $page) {
 
@@ -23,6 +24,16 @@ foreach ($argv as $page) {
         continue;
     }
 
+	if ($page == "narrow") {
+		$size = "narrow";
+		continue;
+	}
+
+	if ($page == "wide") {
+		$size = "wide";
+		continue;
+	}
+	
     if ($page == "output") {
         $name = false;
         continue;
@@ -46,7 +57,7 @@ foreach ($argv as $page) {
     }
 
     if (preg_match("/^(.*)\.pag$/", $page, $m)) {
-        create_page($m[1], $nextpage, $out);
+        create_page($m[1], $nextpage, $out, $size);
     } else {
         print "Unknown file $page\n";
     }
@@ -79,7 +90,7 @@ unlink($name . ".ps");
 unlink($name . ".log");
 unlink($name . ".aux");
 
-function create_page($name, $side, &$out) {
+function create_page($name, $side, &$out, $size) {
     $data = file_get_contents($name . ".pag");
     $lines = explode("\n", $data);
 
@@ -95,11 +106,21 @@ function create_page($name, $side, &$out) {
         $out[] = '    \draw (0mm, 13mm) -- (13mm, 0mm) -- (116mm, 0mm) -- (116mm, 175mm) -- (13mm, 175mm) -- (0mm, 162mm) -- (0mm, 13mm);';
     }
 
-    for ($l = 0; $l < 11; $l++) {
-        $out[] = '\draw (15mm, ' . (($l * 14.5) + 14.5) . 'mm) -- (101mm, ' . (($l * 14.5) + 14.5) . 'mm);';
-    }
+	if ($size == "narrow") {
+		for ($l = 0; $l < 11; $l++) {
+			$out[] = '\draw (15mm, ' . (($l * 14.5) + 14.5) . 'mm) -- (101mm, ' . (($l * 14.5) + 14.5) . 'mm);';
+		}
+	} else if ($size == "wide") {
+		for ($l = 0; $l < 5; $l++) {
+			$out[] = '\draw (15mm, ' . (($l * 29) + 29) . 'mm) -- (101mm, ' . (($l * 29) + 29) . 'mm);';
+		}
+	}
 
-    $pos = 175 - 7.25;
+	if ($size == "narrow") {
+		$pos = 175 - 7.25;
+	} else if ($size == "wide") {
+		$pos = 175 - 14.5;
+	}
     foreach ($lines as $line) {
         if (strlen($line) > 0) {
 
@@ -145,7 +166,11 @@ function create_page($name, $side, &$out) {
                 $out[] = '  };';
             }
         }
-        $pos -= 14.5;
+		if ($size == "narrow") {
+				$pos -= 14.5;
+		} else if ($size == "wide") {
+				$pos -= 29;
+		}
     }
 
 
